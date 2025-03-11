@@ -63,41 +63,38 @@
         </div>
     </div>
 
-    <script type="module">
-        import { Client, Storage, ID, InputFile } from "https://cdn.jsdelivr.net/npm/appwrite@latest";
+<script src="https://cdn.jsdelivr.net/npm/appwrite@latest"></script>
+<script>
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+        document.getElementById('fileInput').click();
+    });
 
-        const client = new Client();
-        client
-            .setEndpoint("https://cloud.appwrite.io/v1") // Replace with your Appwrite endpoint
-            .setProject("67cfc2c40039aa6a8271"); // Replace with your Appwrite project ID
+    // Initialize Appwrite
+    const client = new Appwrite.Client();
+    client
+        .setEndpoint("https://cloud.appwrite.io/v1") // Replace with your Appwrite endpoint
+        .setProject("67cfc2c40039aa6a8271"); // Replace with your Appwrite project ID
 
-        const storage = new Storage(client);
+    const storage = new Appwrite.Storage(client);
 
-        document.getElementById('uploadBtn').addEventListener('click', () => {
-            document.getElementById('fileInput').click();
-        });
+    document.getElementById('fileInput').addEventListener('change', async (event) => {
+        const fileList = document.getElementById('fileList');
+        
+        for (const file of event.target.files) {
+            try {
+                const response = await storage.createFile('67cfc37f000bcb1df8d5', Appwrite.ID.unique(), file);
+                console.log("Uploaded:", response);
 
-        document.getElementById('fileInput').addEventListener('change', async (event) => {
-            const fileList = document.getElementById('fileList');
-
-            for (const file of event.target.files) {
-                try {
-                    const response = await storage.createFile(
-                        '67cfc37f000bcb1df8d5', 
-                        ID.unique(), 
-                        InputFile.fromBlob(file, file.name)
-                    );
-                    console.log("Uploaded:", response);
-
-                    const fileItem = document.createElement('div');
-                    fileItem.className = 'file-item';
-                    fileItem.textContent = file.name;
-                    fileList.appendChild(fileItem);
-                } catch (error) {
-                    console.error("Upload failed:", error);
-                }
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.textContent = file.name;
+                fileList.appendChild(fileItem);
+            } catch (error) {
+                console.error("Upload failed:", error);
             }
-        });
-    </script>
+        }
+    });
+</script>
+
 </body>
 </html>
