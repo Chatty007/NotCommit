@@ -20,71 +20,26 @@
     <div id="fileList">Loading...</div>
 
     <script>
-    const client = new Appwrite.Client();
-    client.setEndpoint('https://cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
-          .setProject('67cfc2c40039aa6a8271'); // Replace with your Appwrite project ID
+import { Client, Storage } from "appwrite";
 
-    let storage; // Declare storage variable
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<67cfc2c40039aa6a8271>');
 
-    async function initializeStorage() {
-        try {
-            storage = new Appwrite.Storage(client); // Initialize storage
-            console.log("Storage initialized");
-            listFiles(); // Load files after storage is ready
-        } catch (error) {
-            console.error("Storage initialization failed:", error);
-        }
-    }
+const storage = new Storage(client);
 
-    const bucketID = '67cfc37f000bcb1df8d5'; // Replace with your Appwrite bucket ID
+const promise = storage.createFile(
+    '[67cfc37f000bcb1df8d5]',
+    ID.unique(),
+    document.getElementById('uploader').files[0]
+);
 
-    // 📌 Upload Files
-    async function uploadFiles() {
-        if (!storage) {
-            alert("Storage is not initialized yet!");
-            return;
-        }
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
 
-        const input = document.getElementById('fileInput');
-        if (input.files.length === 0) return alert("No file selected!");
-
-        for (const file of input.files) {
-            try {
-                console.log("Uploading:", file.name);
-                const response = await storage.createFile(bucketID, Appwrite.ID.unique(), file);
-                console.log("Upload Success:", response);
-                listFiles(); // Refresh file list
-            } catch (error) {
-                console.error("Upload Error:", error);
-                alert("Upload failed: " + error.message);
-            }
-        }
-    }
-
-    // 📌 List Files
-    async function listFiles() {
-        if (!storage) {
-            alert("Storage is not initialized yet!");
-            return;
-        }
-
-        try {
-            const response = await storage.listFiles(bucketID);
-            const fileList = document.getElementById("fileList");
-            fileList.innerHTML = "";
-            response.files.forEach(file => {
-                const fileItem = document.createElement("div");
-                fileItem.className = "file-item";
-                fileItem.innerHTML = `<a href="https://cloud.appwrite.io/v1/storage/buckets/${bucketID}/files/${file.$id}/view?project=YOUR_PROJECT_ID" target="_blank">${file.name}</a>`;
-                fileList.appendChild(fileItem);
-            });
-        } catch (error) {
-            console.error("List Error:", error);
-            document.getElementById("fileList").innerHTML = "Error loading files.";
-        }
-    }
-
-    initializeStorage(); // Initialize storage on page load
 </script>
 
 </body>
