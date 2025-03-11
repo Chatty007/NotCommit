@@ -3,98 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordld Wide Web</title>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/appwrite@latest"></script>
+    <title>Appwrite File Upload</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@10.0.0"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-        }
-        .sidebar {
-            width: 250px;
-            background: #202124;
-            color: white;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .sidebar h2 {
-            margin-bottom: 20px;
-        }
-        .sidebar button {
-            padding: 10px;
-            background: #1a73e8;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .main-content {
-            flex-grow: 1;
-            padding: 20px;
-            background: #f1f3f4;
-        }
-        .file-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        .file-item {
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #fileList { margin-top: 20px; }
+        .file-item { padding: 10px; border-bottom: 1px solid #ccc; }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Drive Clone</h2>
-        <button id="uploadBtn">Upload Files</button>
-        <input type="file" id="fileInput" multiple hidden>
-    </div>
-    <div class="main-content">
-        <h3>Your Files</h3>
-        <div class="file-list" id="fileList">
-            <!-- Files will be listed here dynamically -->
-        </div>
-    </div>
+    <h2>Appwrite File Upload</h2>
+    <input type="file" id="fileInput" multiple>
+    <button onclick="uploadFiles()">Upload Files</button>
+    
+    <h3>Your Files</h3>
+    <div id="fileList">Loading...</div>
 
-<script src="https://cdn.jsdelivr.net/npm/appwrite@latest"></script>
-<script>
-    document.getElementById('uploadBtn').addEventListener('click', () => {
-        document.getElementById('fileInput').click();
-    });
+    <script>
+        const client = new Appwrite.Client()
+            .setEndpoint('https://cloud.appwrite.io/v1') // Change this if using self-hosted
+            .setProject('67cfc2c40039aa6a8271'); // Replace with your Appwrite Project ID
 
-    // Initialize Appwrite
-    const client = new Appwrite.Client();
-    client
-        .setEndpoint("https://cloud.appwrite.io/v1") // Replace with your Appwrite endpoint
-        .setProject("67cfc2c40039aa6a8271"); // Replace with your Appwrite project ID
+        const storage = new Appwrite.Storage(client);
+        const bucketID = '67cfc37f000bcb1df8d5'; // Replace with your Appwrite Bucket ID
 
-    const storage = new Appwrite.Storage(client);
+        // 📌 Upload Files
+        async function uploadFiles() {
+            const input = document.getElementById('fileInput');
+            if (input.files.length === 0) return alert("No file selected!");
 
-    document.getElementById('fileInput').addEventListener('change', async (event) => {
-        const fileList = document.getElementById('fileList');
-        
-        for (const file of event.target.files) {
+            for (const file of input.files) {
+                try {
+                    console.log("Uploading:", file.name);
+                    const response = await storage.createFile(bucketID, Appwrite.ID.unique(), file);
+                    console.log("Upload Success:", response);
+                } catch (error) {
+                    console.error("Upload Error:", error);
+                    alert("Upload failed: " + error.message);
+                }
+            }
+            listFiles();
+        }
+
+        // 📌 List Files
+        async function listFiles() {
             try {
-                const response = await storage.createFile('67cfc37f000bcb1df8d5', Appwrite.ID.unique(), file);
-                console.log("Uploaded:", response);
-
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.textContent = file.name;
-                fileList.appendChild(fileItem);
+                const response = await storage.listFiles(bucketID);
+                const fileList = document.getElementById("fileList");
+                fileList.innerHTML = "";
+                response.files.forEach(file => {
+                    const fileItem = document.createElement("div");
+                    fileItem.className = "file-item";
+                    fileItem.innerHTML = `<a href="https://cloud.appwrite.io/v1/storage/buckets/${bucketID}/files/${file.$id}/view?project=YOUR_PROJECT_ID" target="_blank">${file.name}</a>`;
+                    fileList.appendChild(fileItem);
+                });
             } catch (error) {
-                console.error("Upload failed:", error);
+                console.error("List Error:", error);
+                document.getElementById("fileList").innerHTML = "Error loading files.";
             }
         }
-    });
-</script>
 
+        listFiles(); // Load files on page load
+    </script>
 </body>
 </html>
